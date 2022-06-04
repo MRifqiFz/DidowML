@@ -18,11 +18,10 @@ def shadow_remove(img):
     shadowremov = cv2.merge(result_norm_planes)
     return shadowremov
 
-model = load_model('./Model/combine/2/combine_model.h5')
 # load the input image from disk, convert it to grayscale, and blur it to reduce noise
 def preprocess_image(img):
     image = cv2.imread(img)
-    image = imutils.resize(image, width=500)
+    image = imutils.resize(image, width=400)
     image = shadow_remove(image)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -43,12 +42,12 @@ def set_box(contours, gray):
         (x, y, w, h) = cv2.boundingRect(c)
         # filter out bounding boxes, ensuring they are neither too small
         # nor too large
-        if (w >= 20 and w <= 150) and (h >= 30 and h <= 125):
+        if (w >= 5 and w <= 150) and (h >= 30 and h <= 125):
             # extract the character and threshold it to make the character
             # appear as *white* (foreground) on a *black* background, then
             # grab the width and height of the thresholded image
             roi = gray[y:y + h, x:x + w]
-            kernel = np.ones((3, 3), np.uint8)
+            kernel = np.ones((5, 5), np.uint8)
             thresh = cv2.threshold(roi, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
             thresh = cv2.dilate(thresh, kernel, iterations=1)
             (tH, tW) = thresh.shape
@@ -76,7 +75,8 @@ def set_box(contours, gray):
             chars.append((padded, (x, y, w, h)))
     return chars
 
-contours, gray, image = preprocess_image('Data/Testing/KURANG.jpg')
+model = load_model('./Model/emnist/2/emnist_model.h5')
+contours, gray, image = preprocess_image('Data/Testing/test2.png')
 chars = set_box(contours, gray)
 # extract the bounding box locations and padded characters
 boxes = [b[1] for b in chars]
